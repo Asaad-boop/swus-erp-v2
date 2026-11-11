@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# SWUS ERP v2
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+নতুন ERP — পুরানো (Lovable) ERP-এর পাশাপাশি চলে, **একই Supabase database** ব্যবহার করে।
+কোনো data কপি বা migrate করা হয় না; একই login, একই RLS, একই DB functions।
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## চালানো
+```
+npm install
+cp .env.example .env   # Supabase URL + publishable key
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Deploy (Vercel)
+Framework: Vite · Build: `npm run build` · Output: `dist`
+Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, optional `VITE_LEGACY_ERP_URL`.
+
+## নিয়ম (নিরাপত্তার জন্য)
+- Status বদলায় শুধু `transition_order_status` / `bulk_transition_order_status` দিয়ে — পুরানো ERP-র মতোই, তাই সব trigger (stock, finance) একই থাকে।
+- Return receive হয় `confirm_return_received` দিয়ে (শুধু "good" হলে restock)।
+- Courier booking ছাড়া কোনো order "shipped" করা যায় না।
+- দিনের হিসাব সবসময় Asia/Dhaka সময়ে।
+- `paid` = delivered + টাকা পাওয়া; delivered গ্রুপে ধরা হয় (পুরানো dashboard RPC এটা বাদ দিত)।
+- Website-এর মৃত lead (`status=new`, `web_status` cancelled/complete) কাজের list-এ দেখায় না।
+
+## যা তৈরি
+Dashboard · Orders (list, drawer, bulk) · নতুন Order · Dispatch (pick list + scan) · Products & Stock · Customers · Returns · COD Reconciliation
+
+## বাকি
+Courier booking API (Pathao/Steadfast, server function) · Finance · Marketing · Reports · Imports/PO · Stocktake · HR · Settings

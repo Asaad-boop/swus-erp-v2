@@ -18,6 +18,7 @@ const Inventory = lazy(() => import("@/pages/Inventory"));
 const Customers = lazy(() => import("@/pages/Customers"));
 const Returns = lazy(() => import("@/pages/Returns"));
 const Reconciliation = lazy(() => import("@/pages/Reconciliation"));
+const Finance = lazy(() => import("@/pages/Finance"));
 
 const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: true, retry: 1 } },
@@ -59,6 +60,7 @@ function Gate() {
           <Route path="customers" element={<Customers />} />
           <Route path="returns" element={<Returns />} />
           <Route path="reconciliation" element={<Reconciliation />} />
+          <Route path="finance" element={<Finance />} />
           <Route path="login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<ComingSoon />} />
         </Route>

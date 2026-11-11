@@ -27,7 +27,7 @@ export const NAV: NavSection[] = [
     items: [
       { to: "/returns", label: "Returns", icon: RotateCcw, ready: true },
       { to: "/reconciliation", label: "COD Reconciliation", icon: FileSpreadsheet, ready: true },
-      { to: "/finance", label: "Finance", icon: Wallet },
+      { to: "/finance", label: "Finance & P&L", icon: Wallet, ready: true },
       { to: "/finance/journal", label: "Journal", icon: BookOpen },
     ],
   },

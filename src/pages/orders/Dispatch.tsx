@@ -92,6 +92,10 @@ export default function Dispatch() {
       setLastScan({ ok: false, text: `"${code}" এই list-এ নেই` });
       return;
     }
+    if (mode === "ship" && !hit.tracking_number) {
+      setLastScan({ ok: false, text: `${hit.invoice_no}: courier-এ book হয়নি (tracking নেই) — আগে book করুন` });
+      return;
+    }
     move.mutate([hit.id], {
       onSuccess: () => setLastScan({ ok: true, text: `${hit.invoice_no} → ${cfg.verb} ✓` }),
       onError: (err) => setLastScan({ ok: false, text: err instanceof Error ? err.message : "Failed" }),
@@ -100,6 +104,10 @@ export default function Dispatch() {
   }
 
   const rows = list.data ?? [];
+  // Shipping without a courier booking would leave the order untracked by
+  // courier sync, so only booked (tracking number) orders can be shipped here.
+  const actionable = mode === "ship" ? rows.filter((r) => r.tracking_number) : rows;
+  const unbooked = rows.length - actionable.length;
 
   return (
     <div>
@@ -142,6 +150,11 @@ export default function Dispatch() {
       </Card>
 
       {list.error && <ErrorBox error={list.error} />}
+      {mode === "ship" && unbooked > 0 && (
+        <div className="mb-4 rounded-lg border border-warn/40 bg-warn-soft px-3 py-2 text-sm text-warn">
+          {unbooked}টা order এখনো courier-এ book হয়নি। Booking (Pathao/Steadfast API) v2-তে পরের ধাপে আসছে — ততক্ষণ পুরানো ERP-র Dispatch থেকে book করুন।
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-2">
@@ -171,19 +184,19 @@ export default function Dispatch() {
             title="Orders"
             sub="পুরানো order আগে"
             right={
-              rows.length > 0 && (
+              actionable.length > 0 && (
                 <Button
                   size="sm"
                   loading={move.isPending}
                   onClick={() => {
-                    if (!confirm(`সব ${rows.length}টা order → ${cfg.verb}?`)) return;
-                    move.mutate(rows.map((r) => r.id), {
-                      onSuccess: () => toast.success(`${rows.length}টা order ${cfg.verb}`),
+                    if (!confirm(`${actionable.length}টা order → ${cfg.verb}?`)) return;
+                    move.mutate(actionable.map((r) => r.id), {
+                      onSuccess: () => toast.success(`${actionable.length}টা order ${cfg.verb}`),
                       onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
                     });
                   }}
                 >
-                  সব {cfg.verb}
+                  {mode === "ship" && actionable.length < rows.length ? `Booked ${actionable.length}টা` : "সব"} {cfg.verb}
                 </Button>
               )
             }
@@ -209,9 +222,13 @@ export default function Dispatch() {
                     <div className="num text-sm font-medium">{money(cod)}</div>
                     <div className="text-[11px] capitalize text-muted">{o.courier_name ?? "—"}</div>
                   </div>
-                  <Button size="icon" variant="ghost" title={cfg.verb} onClick={() => move.mutate([o.id], { onError: (e) => toast.error(e instanceof Error ? e.message : "Failed") })}>
-                    <CheckCircle2 className="h-5 w-5 text-good" />
-                  </Button>
+                  {mode === "ship" && !o.tracking_number ? (
+                    <Badge tone="warn">Book বাকি</Badge>
+                  ) : (
+                    <Button size="icon" variant="ghost" title={cfg.verb} onClick={() => move.mutate([o.id], { onError: (e) => toast.error(e instanceof Error ? e.message : "Failed") })}>
+                      <CheckCircle2 className="h-5 w-5 text-good" />
+                    </Button>
+                  )}
                 </div>
               );
             })}

@@ -101,7 +101,8 @@ export function OrderDrawer({ orderId, onClose }: { orderId: string | null; onCl
   });
 
   const meta = statusMeta(o?.status);
-  const next = o ? NEXT_ACTIONS[o.status as OrderStatus] ?? [] : [];
+  // Never ship an order that has no courier booking (it would fall out of courier sync).
+  const next = o ? (NEXT_ACTIONS[o.status as OrderStatus] ?? []).filter((t) => t !== "shipped" || !!o.tracking_number) : [];
   const due = o ? Math.max(0, Number(o.total) - Number(o.advance_amount || 0)) : 0;
   const address = o ? [o.shipping_address, o.pathao_area_name, o.pathao_zone_name, o.pathao_city_name || o.shipping_city].filter(Boolean).join(", ") : "";
 
